@@ -1,0 +1,11 @@
+## Interface: 60200
+## Title: SubSpec
+## Author: Demonist
+## Version: 0.0.0.1
+## SavedVariables: SubSpecStorage
+## Notes: Allows to create a profiles of talents, glyphs and wears.
+## Notes-ruRU: Позволяет создавать профили талантов, символов и шмотья.
+
+Locale.lua
+
+SubSpec.lua
