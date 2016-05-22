@@ -15,7 +15,7 @@ Unfortunately it is only one way to switch more then one talent.
 
 
 #Screenshots
-![_image not found_](screenshots/Standatd.jpg)
+![_image not found_](screenshots/Standard.jpg)
 
 ![_image not found_](screenshots/ElvUI.jpg)
 
