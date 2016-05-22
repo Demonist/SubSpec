@@ -1,7 +1,7 @@
 local L = SubSpecGlobal.L
 
 LoadAddOn('Blizzard_TalentUI')
-local mainFrame = CreateFrame("Frame", "SubSpec_MainFrame", PlayerTalentFrame)
+local mainFrame = CreateFrame("Frame", "SubSpec_MainFrame", PlayerTalentFrameTalents)
 mainFrame:Hide()
 SubSpecGlobal._mainFrame = mainFrame
 
@@ -27,11 +27,11 @@ local function GetCurrentTalents()
 end
 
 local function SaveProfiles()
-	local class = UnitClass("player")
+	local spec = select(2, GetSpecializationInfo(GetSpecialization()))
 	if not SubSpecStorage then SubSpecStorage = {}; end
-	SubSpecStorage[class] = {}
+	SubSpecStorage[spec] = {}
 	for i = 1, mainFrame.visibleProfiles do
-		table.insert(SubSpecStorage[class], {name = mainFrame.profiles[i].buttonBackground:GetText(), data = mainFrame.profiles[i].data})
+		table.insert(SubSpecStorage[spec], {name = mainFrame.profiles[i].buttonBackground:GetText(), data = mainFrame.profiles[i].data})
 	end
 
 end
@@ -414,9 +414,9 @@ local function CreateUi()
 	mainFrame.profiles = {}
 	mainFrame.visibleProfiles = 0
 	if not SubSpecStorage then SubSpecStorage = {}; end
-	local class = UnitClass("player")
-	if SubSpecStorage[class] then
-		for _, profile in ipairs(SubSpecStorage[class]) do
+	local spec = select(2, GetSpecializationInfo(GetSpecialization()))
+	if SubSpecStorage[spec] then
+		for _, profile in ipairs(SubSpecStorage[spec]) do
 			AddProfileButton(profile["name"], profile["data"])
 		end
 	end
@@ -424,9 +424,22 @@ end
 
 local startTime = -1
 eventFrame:RegisterEvent("PLAYER_LOGIN")
+eventFrame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 local function OnEvent(self, event, ...)
 	if event == "PLAYER_LOGIN" then
 		startTime = GetTime()
+	elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
+		for i = 1, mainFrame.visibleProfiles do
+			mainFrame.profiles[i]:Hide()
+		end
+		mainFrame.visibleProfiles = 0
+		if not SubSpecStorage then SubSpecStorage = {}; end
+		local spec = select(2, GetSpecializationInfo(GetSpecialization()))
+		if SubSpecStorage[spec] then
+			for _, profile in ipairs(SubSpecStorage[spec]) do
+				AddProfileButton(profile["name"], profile["data"])
+			end
+		end
 	end
 end
 eventFrame:SetScript("OnEvent", OnEvent)
