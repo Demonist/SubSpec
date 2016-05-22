@@ -17,10 +17,12 @@ local function GetCurrentTalents()
 			if selected then
 				ret[tier]["column"] = column
 				ret[tier]["id"] = id
+				ret[tier]["name"] = name
 				break
 			end
 		end
 	end
+	ret["bar"] = {}
 	return ret
 end
 
@@ -86,6 +88,32 @@ function SubSpec_LearnDelayed(id)
 	LearnTalents(id)
 end
 
+local _placeActionDelayedProfileIndex = 0
+function SubSpec_PlaceActionsDelayed()
+	local barData = mainFrame.profiles[_placeActionDelayedProfileIndex].data["bar"]
+	if not barData then return; end
+	for talentId, actionData in pairs(barData) do
+		local slots = {}
+		for i, slotId in ipairs(actionData["slots"]) do
+			local actionType, spellId = GetActionInfo(slotId)
+			if not actionType or actionType ~= "spell" or spellId ~= actionData["spellId"] then
+				table.insert(slots, slotId)
+			end
+		end
+		if #slots > 0 then
+			for i, slotId in ipairs(slots) do
+				PickupTalent(talentId)
+				PlaceAction(slotId)
+				ClearCursor()
+			end
+		end
+	end
+end
+function SubSpec_PlaceActions(profileIndex)
+	_placeActionDelayedProfileIndex = profileIndex
+	Wait(0.5, SubSpec_PlaceActionsDelayed)
+end
+
 local function CreateNewProfileButton(parent, text, data)
 	local ret = CreateFrame("Frame", nil, parent)
 	ret.data = data
@@ -119,7 +147,9 @@ local function CreateNewProfileButton(parent, text, data)
 	ret.button:SetScript("PreClick", function(self)
 		if InCombatLockdown() then return; end
 		local talentsToRemove = {}
+		local talentsToLearn = {}
 		SubSpec_TalentsToLearn = {}
+
 		local currentData = GetCurrentTalents()
 		for tier = 1, 7 do
 			if self.profileFrame.data and self.profileFrame.data[tier] and self.profileFrame.data[tier]["id"] and self.profileFrame.data[tier]["id"] > 0 then
@@ -129,7 +159,7 @@ local function CreateNewProfileButton(parent, text, data)
 					SubSpec_TalentsToLearn[tier] = selfId
 				elseif currId ~= selfId then
 					talentsToRemove[tier] = self.profileFrame.data[tier]["column"]
-					SubSpec_TalentsToLearn[tier] = selfId
+					talentsToLearn[tier] = selfId
 				end
 			end
 		end
@@ -139,9 +169,10 @@ local function CreateNewProfileButton(parent, text, data)
 			macrotext = macrotext..
 				"/click PlayerTalentFrameTalentsTalentRow"..row.."Talent"..column.."\n"..
 				"/click StaticPopup1Button1\n"..
-				"/run SubSpec_LearnDelayed("..SubSpec_TalentsToLearn[row]..")\n"
+				"/run SubSpec_LearnDelayed("..talentsToLearn[row]..")\n"
 		end
-		self:SetAttribute("macrotext", macrotext.."/run SubSpec_LearnTalents()")
+		self:SetAttribute("macrotext", macrotext.."/run SubSpec_LearnTalents()\n"..
+			"/run SubSpec_PlaceActions("..self.profileFrame.index..")")
 	end)
 
 	ret.index = 0
@@ -194,7 +225,26 @@ end
 
 local function MenuSave()
 	if mainFrame.menuButton.index > 0 then
-		mainFrame.profiles[mainFrame.menuButton.index].data = GetCurrentTalents()
+		local profile = mainFrame.profiles[mainFrame.menuButton.index]
+		profile.data = GetCurrentTalents()
+
+		local interestSpellIds = {}
+		for tier = 1, 7 do
+			local talentName = profile.data[tier]["name"]
+			local name, rank, icon, castingTime, minRange, maxRange, spellId = GetSpellInfo(talentName)
+			if name and spellId then
+				interestSpellIds[spellId] = profile.data[tier]["id"]
+			end
+		end
+		local barData = {}
+		for slotId = 1, 120 do
+			local actionType, spellId = GetActionInfo(slotId)
+			if actionType and actionType == "spell" and interestSpellIds[spellId] then
+				if not barData[interestSpellIds[spellId]] then barData[interestSpellIds[spellId]] = {["spellId"] = spellId, slots = {}}; end
+				table.insert(barData[interestSpellIds[spellId]]["slots"], slotId)
+			end
+		end
+		profile.data["bar"] = barData
 		SaveProfiles()
 	end
 end

@@ -10,6 +10,8 @@ Just copy **SpellDamage** folder to **World of Warcraft\\Interface\\AddOns\\**.
 
 
 #Note
+A profile saves talent spells position on the action bars.
+
 The switching between profiles make interface freeze for a second.  
 Unfortunately it is only one way to switch more then one talent.
 
