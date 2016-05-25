@@ -139,8 +139,22 @@ local function CreateNewProfileButton(parent, text, data)
 	ret.button:SetScript("OnMouseUp", function(self, button)
 		if button == "LeftButton" then self.background:SetButtonState("NORMAL", false) end
 	end)
-	ret.button:SetScript("OnEnter", function(self) self.background:LockHighlight(); mainFrame.menuButton:ShowOn(self.profileFrame); end)
-	ret.button:SetScript("OnLeave", function(self) self.background:UnlockHighlight(); end)
+	ret.button:SetScript("OnEnter", function(self)
+		self.background:LockHighlight()
+		mainFrame.menuButton:ShowOn(self.profileFrame)
+
+		local text = ""
+		for tier = 1, 7 do
+			text = text..self.profileFrame.data[tier]["name"].."\n"
+		end
+		GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
+		GameTooltip:SetText(text)
+		GameTooltip:Show()
+	end)
+	ret.button:SetScript("OnLeave", function(self)
+		self.background:UnlockHighlight()
+		GameTooltip:Hide()
+	end)
 
 	ret.button:SetAttribute("type", "macro")
 

@@ -32,7 +32,7 @@ if locale == "deDE" then
 	L["remove"] = "Entfernen"
 	L["moveLeft"] = "Geh nach links"
 	L["moveRight"] = "Nach rechts bewegen"
-	L["renameText"] = "Geben Sie den neuen Profilnamen "
+	L["renameText"] = "Geben Sie den neuen Profilnamen"
 	L["cancel"] = "Stornieren"
 end
 

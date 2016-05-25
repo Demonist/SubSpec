@@ -1,15 +1,12 @@
 #SubSpec
 It is the World Of Warcraft addon that allows to create a profiles of talents and switch between them by one button.
 
-#Restrictions
-Works only in WOW **6.2** version.   
-Support user interfaces: standard, ElvUi.
-
 #Installation
 Just copy **SpellDamage** folder to **World of Warcraft\\Interface\\AddOns\\**.
 
-
 #Note
+Support user interfaces: standard, ElvUI.
+
 A profile saves talent spells position on the action bars.
 
 The switching between profiles make interface freeze for a second.  
