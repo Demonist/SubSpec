@@ -2,7 +2,7 @@
 It is the World Of Warcraft addon that allows to create a profiles of talents and switch between them by one button.
 
 #Installation
-Just copy **SpellDamage** folder to **World of Warcraft\\Interface\\AddOns\\**.
+Just copy **SubSpec** folder to **World of Warcraft\\Interface\\AddOns\\**.
 
 #Note
 Support user interfaces: standard, ElvUI.

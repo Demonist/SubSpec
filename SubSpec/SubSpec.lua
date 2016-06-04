@@ -27,13 +27,15 @@ local function GetCurrentTalents()
 end
 
 local function SaveProfiles()
-	local spec = select(2, GetSpecializationInfo(GetSpecialization()))
-	if not SubSpecStorage then SubSpecStorage = {}; end
-	SubSpecStorage[spec] = {}
-	for i = 1, mainFrame.visibleProfiles do
-		table.insert(SubSpecStorage[spec], {name = mainFrame.profiles[i].buttonBackground:GetText(), data = mainFrame.profiles[i].data})
+	local specId = GetSpecialization()
+	if specId then
+		local spec = select(2, GetSpecializationInfo(specId))
+		if not SubSpecStorage then SubSpecStorage = {}; end
+		SubSpecStorage[spec] = {}
+		for i = 1, mainFrame.visibleProfiles do
+			table.insert(SubSpecStorage[spec], {name = mainFrame.profiles[i].buttonBackground:GetText(), data = mainFrame.profiles[i].data})
+		end
 	end
-
 end
 
 local waitTable = {};
@@ -145,7 +147,9 @@ local function CreateNewProfileButton(parent, text, data)
 
 		local text = ""
 		for tier = 1, 7 do
-			text = text..self.profileFrame.data[tier]["name"].."\n"
+			if self.profileFrame.data[tier]["name"] then
+				text = text..self.profileFrame.data[tier]["name"].."\n"
+			end
 		end
 		GameTooltip:SetOwner(self, "ANCHOR_TOPLEFT")
 		GameTooltip:SetText(text)
@@ -304,6 +308,22 @@ local function MenuMoveRight()
 	end
 end
 
+local function LoadSpecData()
+	if not SubSpecStorage then SubSpecStorage = {}; end
+	local specId = GetSpecialization()
+	if specId then
+		mainFrame.createButton:Show()
+		local spec = select(2, GetSpecializationInfo(specId))
+		if spec and SubSpecStorage[spec] then
+			for _, profile in ipairs(SubSpecStorage[spec]) do
+				AddProfileButton(profile["name"], profile["data"])
+			end
+		end
+	else
+		mainFrame.createButton:Hide()
+	end
+end
+
 local function CreateUi()
 	local elvUi = IsAddOnLoaded("ElvUI")
 	
@@ -427,13 +447,7 @@ local function CreateUi()
 	--data:
 	mainFrame.profiles = {}
 	mainFrame.visibleProfiles = 0
-	if not SubSpecStorage then SubSpecStorage = {}; end
-	local spec = select(2, GetSpecializationInfo(GetSpecialization()))
-	if SubSpecStorage[spec] then
-		for _, profile in ipairs(SubSpecStorage[spec]) do
-			AddProfileButton(profile["name"], profile["data"])
-		end
-	end
+	LoadSpecData()
 end
 
 local startTime = -1
@@ -447,13 +461,7 @@ local function OnEvent(self, event, ...)
 			mainFrame.profiles[i]:Hide()
 		end
 		mainFrame.visibleProfiles = 0
-		if not SubSpecStorage then SubSpecStorage = {}; end
-		local spec = select(2, GetSpecializationInfo(GetSpecialization()))
-		if SubSpecStorage[spec] then
-			for _, profile in ipairs(SubSpecStorage[spec]) do
-				AddProfileButton(profile["name"], profile["data"])
-			end
-		end
+		LoadSpecData()
 	end
 end
 eventFrame:SetScript("OnEvent", OnEvent)
