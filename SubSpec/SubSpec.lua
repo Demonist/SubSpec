@@ -1,9 +1,6 @@
 local L = SubSpecGlobal.L
 
-LoadAddOn('Blizzard_TalentUI')
-local mainFrame = CreateFrame("Frame", "SubSpec_MainFrame", PlayerTalentFrameTalents)
-mainFrame:Hide()
-SubSpecGlobal._mainFrame = mainFrame
+local mainFrame = nil
 
 local eventFrame = CreateFrame("Frame", "SubSpec_EventFrame", UIParent)
 eventFrame:Show()
@@ -120,18 +117,15 @@ local function CreateNewProfileButton(parent, text, data)
 	local ret = CreateFrame("Frame", nil, parent)
 	ret.data = data
 	ret:Show()
-	ret:SetFrameLevel(13)
 
 	ret.buttonBackground = CreateFrame("Button", nil, ret, "UIPanelButtonTemplate")
 	ret.buttonBackground:Show()
-	ret.buttonBackground:SetFrameLevel(14)
 	ret.buttonBackground:SetText(text)
 	ret.buttonBackground:SetPoint("TOPLEFT", 5, -2)
 	ret.buttonBackground:SetPoint("BOTTOMRIGHT", -20, 2)
 
 	ret.button = CreateFrame("Button", nil, ret.buttonBackground, "SecureActionButtonTemplate")
 	ret.button:Show()
-	ret.button:SetFrameLevel(50)
 	ret.button:SetAllPoints()
 	ret.button.background = ret.buttonBackground
 	ret.button.profileFrame = ret
@@ -169,7 +163,7 @@ local function CreateNewProfileButton(parent, text, data)
 		SubSpec_TalentsToLearn = {}
 
 		local currentData = GetCurrentTalents()
-		for tier = 1, 7 do
+		for tier = 1, GetMaxTalentTier() do
 			if self.profileFrame.data and self.profileFrame.data[tier] and self.profileFrame.data[tier]["id"] and self.profileFrame.data[tier]["id"] > 0 then
 				local selfId = self.profileFrame.data[tier]["id"]
 				local currId = currentData[tier]["id"]
@@ -321,13 +315,17 @@ local function LoadSpecData()
 		end
 	else
 		mainFrame.createButton:Hide()
+		mainFrame.menuButton:Hide()
 	end
 end
 
 local function CreateUi()
+	mainFrame = CreateFrame("Frame", "SubSpec_MainFrame", PlayerTalentFrameTalents)
+	mainFrame:Hide()
+	SubSpecGlobal._mainFrame = mainFrame
+
 	local elvUi = IsAddOnLoaded("ElvUI")
 	
-	mainFrame:SetFrameLevel(10)
 	mainFrame.texture = mainFrame:CreateTexture(nil, "ARTWORK")
 	mainFrame.texture:SetPoint("TOPLEFT")
 	if elvUi then
@@ -347,12 +345,10 @@ local function CreateUi()
 	mainFrame.createButton:SetPoint("TOPLEFT", 20, -16)
 	mainFrame.createButton:SetSize(20, 18)
 	mainFrame.createButton:SetScript("OnClick", function() AddProfileButton(L["new"], GetCurrentTalents()); end)
-	mainFrame.createButton:SetFrameLevel(11)
 
 	--scroll:
 	local scroll = CreateFrame("ScrollFrame", "SubSpec_Scroll", mainFrame)
 	scroll:Show()
-	scroll:SetFrameLevel(11)
 	scroll:SetPoint("TOPLEFT", 50, -13)
 	scroll:SetPoint("BOTTOMRIGHT", -10, 13)
 	scroll:EnableMouseWheel(true)
@@ -379,7 +375,6 @@ local function CreateUi()
 
 	local scrollContainer = CreateFrame("Frame", nil, scroll)
 	scrollContainer:Show()
-	scrollContainer:SetFrameLevel(12)
 	scrollContainer:SetPoint("TOPLEFT")
 	scrollContainer:SetWidth(scroll:GetWidth())
 	scrollContainer:SetHeight(scroll:GetHeight())
@@ -393,8 +388,8 @@ local function CreateUi()
 	--menu button:
 	local menuButton = CreateFrame("Button", nil, mainFrame.profilesFrame)
 	menuButton:Hide()
-	menuButton:SetFrameLevel(50)
 	menuButton:SetSize(15, 15)
+	menuButton:SetFrameLevel(mainFrame.profilesFrame:GetFrameLevel() + 3)
 	menuButton:SetNormalTexture("Interface\\Buttons\\Arrow-Down-Up")
 	menuButton:SetPushedTexture("Interface\\Buttons\\Arrow-Down-Down")
 	menuButton.index = -1
@@ -410,7 +405,6 @@ local function CreateUi()
 
 	mainFrame.menuFrame = CreateFrame("Frame", "SubSpec_MenuFrame", menuButton, "UIDropDownMenuTemplate")
 	mainFrame.menuFrame:Hide()
-	mainFrame.menuFrame:SetFrameLevel(16)
 	mainFrame.menuFrame.displayMode = "MENU"
 	menuTexts = {
 		{text = L["save"], notCheckable = true, func = MenuSave},
@@ -453,10 +447,11 @@ end
 local startTime = -1
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
+eventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
 local function OnEvent(self, event, ...)
 	if event == "PLAYER_LOGIN" then
 		startTime = GetTime()
-	elseif event == "ACTIVE_TALENT_GROUP_CHANGED" then
+	elseif (event == "ACTIVE_TALENT_GROUP_CHANGED" or event == "PLAYER_SPECIALIZATION_CHANGED") and mainFrame then
 		for i = 1, mainFrame.visibleProfiles do
 			mainFrame.profiles[i]:Hide()
 		end
@@ -467,7 +462,7 @@ end
 eventFrame:SetScript("OnEvent", OnEvent)
 
 local function OnUpdate(self, elapsed)
-	if startTime >= 0 and GetTime() - startTime > 2 then
+	if startTime >= 0 and GetTime() - startTime > 2 and IsAddOnLoaded("Blizzard_TalentUI") then
 		eventFrame:SetScript("OnUpdate", nil)
 		startTime = nil
 		CreateUi()
