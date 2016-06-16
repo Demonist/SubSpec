@@ -64,27 +64,11 @@ local function Wait(delay, func, ...)
   tinsert(waitTable,{delay,func,{...}});
   return true;
 end
-SubSpec_TalentsToLearn = {}
-function SubSpec_LearnTalentsDelayed()
-	for tier, id in pairs(SubSpec_TalentsToLearn) do
-		local currTalents = GetCurrentTalents()
-		if currTalents[tier]["id"] ~= id then
-			LearnTalents(id)
-			SubSpec_TalentsToLearn[tier] = nil
-			Wait(0.15, SubSpec_LearnTalentsDelayed)
-		end
-		break
-	end
-end
-function SubSpec_LearnTalents()
-	Wait(0.25, SubSpec_LearnTalentsDelayed)
-end
 
-function SubSpec_LearnDelayed(id)
+function SubSpec_Delay()
 	debugprofilestart()
 	while debugprofilestop() < 250 do
 	end
-	LearnTalents(id)
 end
 
 local _placeActionDelayedProfileIndex = 0
@@ -158,9 +142,7 @@ local function CreateNewProfileButton(parent, text, data)
 
 	ret.button:SetScript("PreClick", function(self)
 		if InCombatLockdown() then return; end
-		local talentsToRemove = {}
 		local talentsToLearn = {}
-		SubSpec_TalentsToLearn = {}
 
 		local currentData = GetCurrentTalents()
 		for tier = 1, GetMaxTalentTier() do
@@ -168,22 +150,20 @@ local function CreateNewProfileButton(parent, text, data)
 				local selfId = self.profileFrame.data[tier]["id"]
 				local currId = currentData[tier]["id"]
 				if currId == 0 then
-					SubSpec_TalentsToLearn[tier] = selfId
+					talentsToLearn[tier] = self.profileFrame.data[tier]["column"]
 				elseif currId ~= selfId then
-					talentsToRemove[tier] = self.profileFrame.data[tier]["column"]
-					talentsToLearn[tier] = selfId
+					talentsToLearn[tier] = self.profileFrame.data[tier]["column"]
 				end
 			end
 		end
 
 		local macrotext = "/stopmacro [combat]\n"
-		for row, column in pairs(talentsToRemove) do
+		for row, column in pairs(talentsToLearn) do
 			macrotext = macrotext..
 				"/click PlayerTalentFrameTalentsTalentRow"..row.."Talent"..column.."\n"..
-				"/click StaticPopup1Button1\n"..
-				"/run SubSpec_LearnDelayed("..talentsToLearn[row]..")\n"
+				"/run SubSpec_Delay()\n"
 		end
-		self:SetAttribute("macrotext", macrotext.."/run SubSpec_LearnTalents()\n"..
+		self:SetAttribute("macrotext", macrotext..
 			"/run SubSpec_PlaceActions("..self.profileFrame.index..")")
 	end)
 
