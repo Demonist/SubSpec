@@ -30,71 +30,9 @@ local function SaveProfiles()
 		if not SubSpecStorage then SubSpecStorage = {}; end
 		SubSpecStorage[spec] = {}
 		for i = 1, mainFrame.visibleProfiles do
-			table.insert(SubSpecStorage[spec], {name = mainFrame.profiles[i].buttonBackground:GetText(), data = mainFrame.profiles[i].data})
+			table.insert(SubSpecStorage[spec], {name = mainFrame.profiles[i].button:GetText(), data = mainFrame.profiles[i].data})
 		end
 	end
-end
-
-local waitTable = {};
-local waitFrame = nil;
-local function Wait(delay, func, ...)
-  if(type(delay)~="number" or type(func)~="function") then
-    return false;
-  end
-  if(waitFrame == nil) then
-    waitFrame = CreateFrame("Frame","WaitFrame", UIParent);
-    waitFrame:SetScript("onUpdate",function (self,elapse)
-      local count = #waitTable;
-      local i = 1;
-      while(i<=count) do
-        local waitRecord = tremove(waitTable,i);
-        local d = tremove(waitRecord,1);
-        local f = tremove(waitRecord,1);
-        local p = tremove(waitRecord,1);
-        if(d>elapse) then
-          tinsert(waitTable,i,{d-elapse,f,p});
-          i = i + 1;
-        else
-          count = count - 1;
-          f(unpack(p));
-        end
-      end
-    end);
-  end
-  tinsert(waitTable,{delay,func,{...}});
-  return true;
-end
-
-function SubSpec_Delay()
-	debugprofilestart()
-	while debugprofilestop() < 250 do
-	end
-end
-
-local _placeActionDelayedProfileIndex = 0
-function SubSpec_PlaceActionsDelayed()
-	local barData = mainFrame.profiles[_placeActionDelayedProfileIndex].data["bar"]
-	if not barData then return; end
-	for talentId, actionData in pairs(barData) do
-		local slots = {}
-		for i, slotId in ipairs(actionData["slots"]) do
-			local actionType, spellId = GetActionInfo(slotId)
-			if not actionType or actionType ~= "spell" or spellId ~= actionData["spellId"] then
-				table.insert(slots, slotId)
-			end
-		end
-		if #slots > 0 then
-			for i, slotId in ipairs(slots) do
-				PickupTalent(talentId)
-				PlaceAction(slotId)
-				ClearCursor()
-			end
-		end
-	end
-end
-function SubSpec_PlaceActions(profileIndex)
-	_placeActionDelayedProfileIndex = profileIndex
-	Wait(0.5, SubSpec_PlaceActionsDelayed)
 end
 
 local function CreateNewProfileButton(parent, text, data)
@@ -102,25 +40,13 @@ local function CreateNewProfileButton(parent, text, data)
 	ret.data = data
 	ret:Show()
 
-	ret.buttonBackground = CreateFrame("Button", nil, ret, "UIPanelButtonTemplate")
-	ret.buttonBackground:Show()
-	ret.buttonBackground:SetText(text)
-	ret.buttonBackground:SetPoint("TOPLEFT", 5, -2)
-	ret.buttonBackground:SetPoint("BOTTOMRIGHT", -20, 2)
-
-	ret.button = CreateFrame("Button", nil, ret.buttonBackground, "SecureActionButtonTemplate")
+	ret.button = CreateFrame("Button", nil, ret, "UIPanelButtonTemplate")
 	ret.button:Show()
-	ret.button:SetAllPoints()
-	ret.button.background = ret.buttonBackground
+	ret.button:SetText(text)
+	ret.button:SetPoint("TOPLEFT", 5, -2)
+	ret.button:SetPoint("BOTTOMRIGHT", -20, 2)
 	ret.button.profileFrame = ret
-	ret.button:SetScript("OnMouseDown", function(self, button)
-		if button == "LeftButton" then self.background:SetButtonState("PUSHED", true) end
-	end)
-	ret.button:SetScript("OnMouseUp", function(self, button)
-		if button == "LeftButton" then self.background:SetButtonState("NORMAL", false) end
-	end)
 	ret.button:SetScript("OnEnter", function(self)
-		self.background:LockHighlight()
 		mainFrame.menuButton:ShowOn(self.profileFrame)
 
 		local text = ""
@@ -134,13 +60,12 @@ local function CreateNewProfileButton(parent, text, data)
 		GameTooltip:Show()
 	end)
 	ret.button:SetScript("OnLeave", function(self)
-		self.background:UnlockHighlight()
 		GameTooltip:Hide()
 	end)
 
 	ret.button:SetAttribute("type", "macro")
 
-	ret.button:SetScript("PreClick", function(self)
+	ret.button:SetScript("OnClick", function(self)
 		if InCombatLockdown() then return; end
 		local talentsToLearn = {}
 
@@ -150,28 +75,19 @@ local function CreateNewProfileButton(parent, text, data)
 				local selfId = self.profileFrame.data[tier]["id"]
 				local currId = currentData[tier]["id"]
 				if currId == 0 then
-					talentsToLearn[tier] = self.profileFrame.data[tier]["column"]
+					LearnTalents(selfId)
 				elseif currId ~= selfId then
-					talentsToLearn[tier] = self.profileFrame.data[tier]["column"]
+					LearnTalents(selfId)
 				end
 			end
 		end
-
-		local macrotext = "/stopmacro [combat]\n"
-		for row, column in pairs(talentsToLearn) do
-			macrotext = macrotext..
-				"/click PlayerTalentFrameTalentsTalentRow"..row.."Talent"..column.."\n"..
-				"/run SubSpec_Delay()\n"
-		end
-		self:SetAttribute("macrotext", macrotext..
-			"/run SubSpec_PlaceActions("..self.profileFrame.index..")")
 	end)
 
 	ret.index = 0
 	ret:SetScript("OnEnter", function(self) mainFrame.menuButton:ShowOn(self); end)
 	ret.CopyFrom = function(self, frame)
 		self.data = frame.data
-		self.buttonBackground:SetText( frame.buttonBackground:GetText() )
+		self.button:SetText( frame.button:GetText() )
 	end
 	return ret
 end
@@ -191,7 +107,7 @@ local function AddProfileButton(text, data)
 	else
 		mainFrame.visibleProfiles = mainFrame.visibleProfiles + 1
 		local frame = mainFrame.profiles[mainFrame.visibleProfiles]
-		frame.buttonBackground:SetText(text)
+		frame.button:SetText(text)
 		frame.data = data
 		frame:Show()
 	end
@@ -204,13 +120,13 @@ local function MenuRename()
 	if mainFrame.menuButton.index > 0 then
 		StaticPopup_Show("SubSpec_RenameDialog")
 		StaticPopup3EditBox:SetMaxLetters(20)
-		StaticPopup3EditBox:SetText( mainFrame.profiles[mainFrame.menuButton.index].buttonBackground:GetText() );
+		StaticPopup3EditBox:SetText( mainFrame.profiles[mainFrame.menuButton.index].button:GetText() );
 		StaticPopup3EditBox:HighlightText()
 	end
 end
 local function MenuRenameApply()
 	if mainFrame.menuButton.index > 0 then
-		mainFrame.profiles[mainFrame.menuButton.index].buttonBackground:SetText( StaticPopup3EditBox:GetText() )
+		mainFrame.profiles[mainFrame.menuButton.index].button:SetText( StaticPopup3EditBox:GetText() )
 		SaveProfiles()
 	end
 end
@@ -259,10 +175,10 @@ local function MenuMoveLeft()
 		local leftFrame = mainFrame.profiles[mainFrame.menuButton.index-1]
 		local rightFrame = mainFrame.profiles[mainFrame.menuButton.index]
 		local data = leftFrame.data
-		local text = leftFrame.buttonBackground:GetText()
+		local text = leftFrame.button:GetText()
 		leftFrame:CopyFrom(rightFrame)
 		rightFrame.data = data
-		rightFrame.buttonBackground:SetText(text)
+		rightFrame.button:SetText(text)
 		SaveProfiles()
 		mainFrame.menuButton:Hide()
 	end
@@ -273,10 +189,10 @@ local function MenuMoveRight()
 		local leftFrame = mainFrame.profiles[mainFrame.menuButton.index]
 		local rightFrame = mainFrame.profiles[mainFrame.menuButton.index+1]
 		local data = leftFrame.data
-		local text = leftFrame.buttonBackground:GetText()
+		local text = leftFrame.button:GetText()
 		leftFrame:CopyFrom(rightFrame)
 		rightFrame.data = data
-		rightFrame.buttonBackground:SetText(text)
+		rightFrame.button:SetText(text)
 		SaveProfiles()
 		mainFrame.menuButton:Hide()
 	end
@@ -318,6 +234,17 @@ local function CreateUi()
 		mainFrame.texture:SetTexture("Interface\\AddOns\\SubSpec\\Images\\BackgroundStandard.tga")
 	end
 	mainFrame:Show()
+
+	--legion version check:
+	local version = tonumber(string.sub(GetBuildInfo(), 1, 1))
+	if version < 7 then
+		local text = mainFrame:CreateFontString(nil, nil, "GameFontNormalLeft")
+		text:SetFont("Fonts\\ARIALN.TTF", 16, "OUTLINE")
+		text:SetPoint("CENTER")
+		text:SetTextColor(0.7, 0.1, 0)
+		text:SetText(L["versionError"])
+		return
+	end
 
 	--create button:
 	mainFrame.createButton = CreateFrame("Button", nil, mainFrame, "UIPanelButtonTemplate")
@@ -374,7 +301,7 @@ local function CreateUi()
 	menuButton:SetPushedTexture("Interface\\Buttons\\Arrow-Down-Down")
 	menuButton.index = -1
 	menuButton.ShowOn = function(self, profileFrame)
-		self:SetPoint("TOPLEFT", profileFrame.buttonBackground, "TOPRIGHT", 1, -7)
+		self:SetPoint("TOPLEFT", profileFrame.button, "TOPRIGHT", 1, -7)
 		if self.index ~= profileFrame.index then
 			self.index = profileFrame.index
 			if UIDROPDOWNMENU_OPEN_MENU == mainFrame.menuFrame then DropDownList1:Hide(); end

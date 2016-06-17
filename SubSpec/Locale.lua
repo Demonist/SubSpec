@@ -9,6 +9,7 @@ L["moveLeft"] = "Move left"
 L["moveRight"] = "Move right"
 L["renameText"] = "Input new profile name"
 L["cancel"] = "Cancel"
+L["versionError"] = "It's a Legion version of the addon. It doesn't working in early patches"
 
 --------------------------------   ruRU:   -------------------------------------
 
@@ -21,6 +22,7 @@ if locale == "ruRU" then
 	L["moveRight"] = "Переместить вправо"
 	L["renameText"] = "Введите новое имя профиля"
 	L["cancel"] = "Отмена"
+	L["versionError"] = "Это версия аддона для Легиона. Она не работает в более ранних патчах"
 end
 
 --------------------------------   deDE:   -------------------------------------
