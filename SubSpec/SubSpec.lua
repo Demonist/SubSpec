@@ -7,7 +7,7 @@ eventFrame:Show()
 
 local function GetCurrentTalents()
 	local ret = {}
-	for tier = 1, 7 do
+	for tier = 1, GetMaxTalentTier() do
 		ret[tier] = {}
 		for column = 1, 3 do
 			local id, name, texture, selected, available = GetTalentInfo(tier, column, GetActiveSpecGroup())
@@ -22,6 +22,34 @@ local function GetCurrentTalents()
 	ret["bar"] = {}
 	return ret
 end
+
+local elapsedTime = -1
+local talents = {}
+local changesCount = 0
+local function OnUpdateChangeTalents(self, elapsed)
+	if elapsedTime >= 0.2 then
+		local currentData = GetCurrentTalents()
+		local changed = false
+		for i = 1, #talents do
+			local tier = talents[i][1]
+			local selfId = talents[i][2]
+			local currId = currentData[tier]["id"]
+			if currId == 0 or currId ~= selfId then
+				LearnTalents(selfId)
+				changed = true
+			end
+		end
+		
+		changesCount = changesCount + 1
+		if changed == false or changesCount >= 20 then
+			eventFrame:SetScript("OnUpdate", nil)
+		end
+		elapsedTime = 0
+	else
+		elapsedTime = elapsedTime + elapsed
+	end
+end
+
 
 local function SaveProfiles()
 	local specId = GetSpecialization()
@@ -67,17 +95,19 @@ local function CreateNewProfileButton(parent, text, data)
 
 	ret.button:SetScript("OnClick", function(self)
 		if InCombatLockdown() then return; end
-		local talentsToLearn = {}
-
+		talents = {}
 		local currentData = GetCurrentTalents()
 		for tier = 1, GetMaxTalentTier() do
 			if self.profileFrame.data and self.profileFrame.data[tier] and self.profileFrame.data[tier]["id"] and self.profileFrame.data[tier]["id"] > 0 then
 				local selfId = self.profileFrame.data[tier]["id"]
 				local currId = currentData[tier]["id"]
-				if currId == 0 then
+				if currId == 0 or currId ~= selfId then
 					LearnTalents(selfId)
-				elseif currId ~= selfId then
-					LearnTalents(selfId)
+					
+					table.insert(talents, {tier, selfId})
+					elapsedTime = 0
+					changesCount = 0
+					eventFrame:SetScript("OnUpdate", OnUpdateChangeTalents)
 				end
 			end
 		end
@@ -368,11 +398,11 @@ local function OnEvent(self, event, ...)
 end
 eventFrame:SetScript("OnEvent", OnEvent)
 
-local function OnUpdate(self, elapsed)
+local function OnUpdateInitialization(self, elapsed)
 	if startTime >= 0 and GetTime() - startTime > 2 and IsAddOnLoaded("Blizzard_TalentUI") then
 		eventFrame:SetScript("OnUpdate", nil)
 		startTime = nil
 		CreateUi()
 	end
 end
-eventFrame:SetScript("OnUpdate", OnUpdate)
+eventFrame:SetScript("OnUpdate", OnUpdateInitialization)

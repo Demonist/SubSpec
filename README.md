@@ -9,9 +9,6 @@ Support user interfaces: standard, ElvUI.
 
 A profile saves talent spells position on the action bars.
 
-The switching between profiles make interface freeze for a second.  
-Unfortunately it is only one way to switch more then one talent.
-
 
 #Screenshots
 ![_image not found_](screenshots/Standard.jpg)
