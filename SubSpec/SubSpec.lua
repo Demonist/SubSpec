@@ -78,7 +78,7 @@ local function CreateNewProfileButton(parent, text, data)
 		mainFrame.menuButton:ShowOn(self.profileFrame)
 
 		local text = ""
-		for tier = 1, 7 do
+		for tier = 1, GetMaxTalentTier() do
 			if self.profileFrame.data[tier]["name"] then
 				text = text..self.profileFrame.data[tier]["name"].."\n"
 			end
@@ -167,7 +167,7 @@ local function MenuSave()
 		profile.data = GetCurrentTalents()
 
 		local interestSpellIds = {}
-		for tier = 1, 7 do
+		for tier = 1, GetMaxTalentTier() do
 			local talentName = profile.data[tier]["name"]
 			local name, rank, icon, castingTime, minRange, maxRange, spellId = GetSpellInfo(talentName)
 			if name and spellId then
