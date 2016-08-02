@@ -54,11 +54,13 @@ end
 local function SaveProfiles()
 	local specId = GetSpecialization()
 	if specId then
-		local spec = select(2, GetSpecializationInfo(specId))
 		if not SubSpecStorage then SubSpecStorage = {}; end
-		SubSpecStorage[spec] = {}
+		local class = UnitClass("player")
+		local spec = select(2, GetSpecializationInfo(specId))
+		local specName = class.." "..spec
+		SubSpecStorage[specName] = {}
 		for i = 1, mainFrame.visibleProfiles do
-			table.insert(SubSpecStorage[spec], {name = mainFrame.profiles[i].button:GetText(), data = mainFrame.profiles[i].data})
+			table.insert(SubSpecStorage[specName], {name = mainFrame.profiles[i].button:GetText(), data = mainFrame.profiles[i].data})
 		end
 	end
 end
@@ -233,10 +235,20 @@ local function LoadSpecData()
 	local specId = GetSpecialization()
 	if specId then
 		mainFrame.createButton:Show()
+		local class = UnitClass("player")
 		local spec = select(2, GetSpecializationInfo(specId))
-		if spec and SubSpecStorage[spec] then
-			for _, profile in ipairs(SubSpecStorage[spec]) do
+		local specName = class.." "..spec
+		local storage = SubSpecStorage[specName] or SubSpecStorage[spec]
+		if spec and storage then
+			for _, profile in ipairs(storage) do
 				AddProfileButton(profile["name"], profile["data"])
+			end
+		end
+
+		if not SubSpecStorage[specName] and SubSpecStorage[spec] then
+			SubSpecStorage[specName] = {}
+			for _, profile in ipairs(SubSpecStorage[spec]) do
+				table.insert(SubSpecStorage[specName], {name = profile["name"], data = profile["data"]})
 			end
 		end
 	else
