@@ -125,15 +125,15 @@ local function CreateNewProfileButton(parent, text, data)
 end
 
 local function UpdateScrollWidth()
-	mainFrame.profilesFrame:SetWidth(10 + mainFrame.visibleProfiles*150)
+	mainFrame.profilesFrame:SetWidth(10 + mainFrame.visibleProfiles*145)
 end
 
 local function AddProfileButton(text, data)
 	if mainFrame.visibleProfiles == #mainFrame.profiles then
 		local newButtonFrame = CreateNewProfileButton(mainFrame.profilesFrame, text, data)
-		newButtonFrame:SetSize(150, mainFrame.profilesFrame:GetHeight())
+		newButtonFrame:SetSize(145, mainFrame.profilesFrame:GetHeight())
 		newButtonFrame.index = #mainFrame.profiles + 1
-		newButtonFrame:SetPoint("TOPLEFT", #mainFrame.profiles*150, 0)
+		newButtonFrame:SetPoint("TOPLEFT", #mainFrame.profiles*145, 0)
 		table.insert(mainFrame.profiles, newButtonFrame)
 		mainFrame.visibleProfiles = mainFrame.visibleProfiles + 1
 	else

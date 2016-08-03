@@ -1,7 +1,7 @@
 ## Interface: 70003
 ## Title: SubSpec
 ## Author: Demonist
-## Version: 2.1.2.0
+## Version: 2.1.2.1
 ## SavedVariables: SubSpecStorage
 ## Notes: Allows to create a profiles of talents.
 ## Notes-ruRU: Позволяет создавать профили талантов.
