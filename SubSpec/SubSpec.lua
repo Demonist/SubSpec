@@ -50,6 +50,26 @@ local function OnUpdateChangeTalents(self, elapsed)
 	end
 end
 
+local function CheckCurrentProfile()
+	local current = GetCurrentTalents()
+	for i = 1, mainFrame.visibleProfiles do
+		local profileData = mainFrame.profiles[i].data
+		local match = true
+		for tier = 1, GetMaxTalentTier() do
+			if (current[tier] and not profileData[tier])
+				or (not current[tier] and profileData[tier])
+				or (current[tier] and profileData[tier] and current[tier]["id"] ~= profileData[tier]["id"]) then
+				match = false
+				break
+			end
+		end
+		if match then
+			mainFrame.currentButton:ShowOn(mainFrame.profiles[i].button)
+			return
+		end
+	end
+	mainFrame.currentButton:Hide()
+end
 
 local function SaveProfiles()
 	local specId = GetSpecialization()
@@ -98,6 +118,7 @@ local function CreateNewProfileButton(parent, text, data)
 	ret.button:SetScript("OnClick", function(self)
 		if InCombatLockdown() then return; end
 		talents = {}
+		mainFrame.currentButton:ShowOn(self)
 		local currentData = GetCurrentTalents()
 		for tier = 1, GetMaxTalentTier() do
 			if self.profileFrame.data and self.profileFrame.data[tier] and self.profileFrame.data[tier]["id"] and self.profileFrame.data[tier]["id"] > 0 then
@@ -146,6 +167,7 @@ local function AddProfileButton(text, data)
 
 	UpdateScrollWidth()
 	SaveProfiles()
+	CheckCurrentProfile()
 end
 
 local function MenuRename()
@@ -186,6 +208,7 @@ local function MenuSave()
 		end
 		profile.data["bar"] = barData
 		SaveProfiles()
+		mainFrame.currentButton:ShowOn(profile.button)
 	end
 end
 
@@ -199,6 +222,7 @@ local function MenuRemove()
 		UpdateScrollWidth()
 		SaveProfiles()
 		mainFrame.menuButton:Hide()
+		CheckCurrentProfile()
 	end
 end
 
@@ -213,6 +237,7 @@ local function MenuMoveLeft()
 		rightFrame.button:SetText(text)
 		SaveProfiles()
 		mainFrame.menuButton:Hide()
+		CheckCurrentProfile()
 	end
 end
 
@@ -227,6 +252,7 @@ local function MenuMoveRight()
 		rightFrame.button:SetText(text)
 		SaveProfiles()
 		mainFrame.menuButton:Hide()
+		CheckCurrentProfile()
 	end
 end
 
@@ -387,6 +413,20 @@ local function CreateUi()
 		StaticPopup_Hide("SubSpec_RenameDialog")
 	end)
 
+	--current button:
+	local currentButton = CreateFrame("Frame", nil, mainFrame.profilesFrame)
+	currentButton:Hide()
+	currentButton:SetSize(15, 15)
+	currentButton:SetFrameLevel(mainFrame.profilesFrame:GetFrameLevel() + 4)
+	currentButton.texture = currentButton:CreateTexture(nil, "ARTWORK")
+	currentButton.texture:SetAllPoints()
+	currentButton.texture:SetTexture("Interface\\Buttons\\UI-CheckBox-Check")
+	currentButton.ShowOn = function(self, profileButton)
+		self:SetPoint("TOPLEFT", profileButton, "TOPLEFT", 0, 4)
+		self:Show()
+	end
+	mainFrame.currentButton = currentButton
+
 	--data:
 	mainFrame.profiles = {}
 	mainFrame.visibleProfiles = 0
@@ -397,6 +437,7 @@ local startTime = -1
 eventFrame:RegisterEvent("PLAYER_LOGIN")
 eventFrame:RegisterEvent("ACTIVE_TALENT_GROUP_CHANGED")
 eventFrame:RegisterEvent("PLAYER_SPECIALIZATION_CHANGED")
+eventFrame:RegisterEvent("PLAYER_TALENT_UPDATE")
 local function OnEvent(self, event, ...)
 	if event == "PLAYER_LOGIN" then
 		startTime = GetTime()
@@ -406,6 +447,9 @@ local function OnEvent(self, event, ...)
 		end
 		mainFrame.visibleProfiles = 0
 		LoadSpecData()
+		CheckCurrentProfile()
+	elseif event == "PLAYER_TALENT_UPDATE" and mainFrame then
+		CheckCurrentProfile()
 	end
 end
 eventFrame:SetScript("OnEvent", OnEvent)
@@ -415,6 +459,7 @@ local function OnUpdateInitialization(self, elapsed)
 		eventFrame:SetScript("OnUpdate", nil)
 		startTime = nil
 		CreateUi()
+		CheckCurrentProfile()
 	end
 end
 eventFrame:SetScript("OnUpdate", OnUpdateInitialization)
