@@ -54,13 +54,13 @@ end
 --------------------------------   frFR:   -------------------------------------
 
 if locale == "frFR" then
-	L["new"] = "[Nouveau profile]"
-	L["rename"] = "Rebaptiser"
+	L["new"] = "[Nouveau profil]"
+	L["rename"] = "Renommer"
 	L["save"] = "Sauvegarder"
-	L["remove"] = "Retirer"
-	L["moveLeft"] = "Se déplacer à gauche"
-	L["moveRight"] = "Déplacer vers la droite"
-	L["renameText"] = "Entrée nom du nouveau profil"
+	L["remove"] = "Supprimer"
+	L["moveLeft"] = "Déplacer à gauche"
+	L["moveRight"] = "Déplacer à droite"
+	L["renameText"] = "Entrer le nouveau nom du profil"
 	L["cancel"] = "Annuler"
 end
 
