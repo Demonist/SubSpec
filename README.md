@@ -7,8 +7,6 @@ Just copy **SubSpec** folder to **World of Warcraft\\Interface\\AddOns\\**.
 #Note
 Support user interfaces: standard, ElvUI.
 
-A profile saves talent spells position on the action bars.
-
 
 #Screenshots
 ![_image not found_](screenshots/Standard.jpg)

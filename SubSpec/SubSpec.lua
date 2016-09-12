@@ -77,10 +77,14 @@ local function SaveProfiles()
 		if not SubSpecStorage then SubSpecStorage = {}; end
 		local class = UnitClass("player")
 		local spec = select(2, GetSpecializationInfo(specId))
-		local specName = class.." "..spec
-		SubSpecStorage[specName] = {}
-		for i = 1, mainFrame.visibleProfiles do
-			table.insert(SubSpecStorage[specName], {name = mainFrame.profiles[i].button:GetText(), data = mainFrame.profiles[i].data})
+		if class and spec then
+			local specName = class.." "..spec
+			SubSpecStorage[specName] = {}
+			for i = 1, mainFrame.visibleProfiles do
+				table.insert(SubSpecStorage[specName], {name = mainFrame.profiles[i].button:GetText(), data = mainFrame.profiles[i].data})
+			end
+		else
+			DEFAULT_CHAT_FRAME:AddMessage("|cFFffff00SubSpec:|r |cFFffc0c0Can not save profiles|r")
 		end
 	end
 end
@@ -263,18 +267,20 @@ local function LoadSpecData()
 		mainFrame.createButton:Show()
 		local class = UnitClass("player")
 		local spec = select(2, GetSpecializationInfo(specId))
-		local specName = class.." "..spec
-		local storage = SubSpecStorage[specName] or SubSpecStorage[spec]
-		if spec and storage then
-			for _, profile in ipairs(storage) do
-				AddProfileButton(profile["name"], profile["data"])
+		if class and spec then
+			local specName = class.." "..spec
+			local storage = SubSpecStorage[specName] or SubSpecStorage[spec]
+			if spec and storage then
+				for _, profile in ipairs(storage) do
+					AddProfileButton(profile["name"], profile["data"])
+				end
 			end
-		end
 
-		if not SubSpecStorage[specName] and SubSpecStorage[spec] then
-			SubSpecStorage[specName] = {}
-			for _, profile in ipairs(SubSpecStorage[spec]) do
-				table.insert(SubSpecStorage[specName], {name = profile["name"], data = profile["data"]})
+			if not SubSpecStorage[specName] and SubSpecStorage[spec] then
+				SubSpecStorage[specName] = {}
+				for _, profile in ipairs(SubSpecStorage[spec]) do
+					table.insert(SubSpecStorage[specName], {name = profile["name"], data = profile["data"]})
+				end
 			end
 		end
 	else
