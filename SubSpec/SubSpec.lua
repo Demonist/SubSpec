@@ -5,6 +5,9 @@ local mainFrame = nil
 local eventFrame = CreateFrame("Frame", "SubSpec_EventFrame", UIParent)
 eventFrame:Show()
 
+local updateTalentsFrame = CreateFrame("Frame", "SubSpec_UpdateTalentsFrame", UIParent)
+updateTalentsFrame:Show()
+
 local function GetCurrentTalents()
 	local ret = {}
 	for tier = 1, GetMaxTalentTier() do
@@ -19,7 +22,6 @@ local function GetCurrentTalents()
 			end
 		end
 	end
-	ret["bar"] = {}
 	return ret
 end
 
@@ -42,7 +44,7 @@ local function OnUpdateChangeTalents(self, elapsed)
 		
 		changesCount = changesCount + 1
 		if changed == false or changesCount >= 20 then
-			eventFrame:SetScript("OnUpdate", nil)
+			updateTalentsFrame:SetScript("OnUpdate", nil)
 		end
 		elapsedTime = 0
 	else
@@ -134,7 +136,7 @@ local function CreateNewProfileButton(parent, text, data)
 					table.insert(talents, {tier, selfId})
 					elapsedTime = 0
 					changesCount = 0
-					eventFrame:SetScript("OnUpdate", OnUpdateChangeTalents)
+					updateTalentsFrame:SetScript("OnUpdate", OnUpdateChangeTalents)
 				end
 			end
 		end
@@ -202,15 +204,7 @@ local function MenuSave()
 				interestSpellIds[spellId] = profile.data[tier]["id"]
 			end
 		end
-		local barData = {}
-		for slotId = 1, 120 do
-			local actionType, spellId = GetActionInfo(slotId)
-			if actionType and actionType == "spell" and interestSpellIds[spellId] then
-				if not barData[interestSpellIds[spellId]] then barData[interestSpellIds[spellId]] = {["spellId"] = spellId, slots = {}}; end
-				table.insert(barData[interestSpellIds[spellId]]["slots"], slotId)
-			end
-		end
-		profile.data["bar"] = barData
+
 		SaveProfiles()
 		mainFrame.currentButton:ShowOn(profile.button)
 	end
@@ -270,7 +264,7 @@ local function LoadSpecData()
 		if class and spec then
 			local specName = class.." "..spec
 			local storage = SubSpecStorage[specName] or SubSpecStorage[spec]
-			if spec and storage then
+			if storage then
 				for _, profile in ipairs(storage) do
 					AddProfileButton(profile["name"], profile["data"])
 				end
@@ -469,3 +463,63 @@ local function OnUpdateInitialization(self, elapsed)
 	end
 end
 eventFrame:SetScript("OnUpdate", OnUpdateInitialization)
+
+SLASH_SUBSPEC1, SLASH_SUBSPEC2 = "/subspec", "/ss"
+function SlashCmdList.SUBSPEC(msg)
+	if msg == "version" then
+		DEFAULT_CHAT_FRAME:AddMessage("|cFFffff00SubSpec:|r Version - "..GetAddOnMetadata("SubSpec", "Version"))
+	else
+		local cmd = string.sub(msg, 1, 5)
+		if cmd == "load " then
+			local profile = string.sub(msg, 6)
+			if mainFrame then
+				for i = 1, mainFrame.visibleProfiles do
+					if mainFrame.profiles[i].button:GetText() == profile then
+						mainFrame.profiles[i].button:Click()
+						return
+					end
+				end
+			else
+				local class = UnitClass("player")
+				local specId = GetSpecialization()
+				if specId then
+					local spec = select(2, GetSpecializationInfo(specId))
+					if class and spec then
+						local specName = class.." "..spec
+						local storage = SubSpecStorage[specName] or SubSpecStorage[spec]
+						if storage then
+							for _, storageProfile in ipairs(storage) do
+								if storageProfile["name"] == profile then
+									talents = {}
+									local profileData = storageProfile["data"]
+									local currentData = GetCurrentTalents()
+									for tier = 1, GetMaxTalentTier() do
+										if profileData and profileData[tier] and profileData[tier]["id"] and profileData[tier]["id"] > 0
+											and currentData and currentData[tier] and currentData[tier]["id"] then
+											local selfId = profileData[tier]["id"]
+											local currId = currentData[tier]["id"]
+											if currId == 0 or currId ~= selfId then
+												LearnTalents(selfId)
+												
+												table.insert(talents, {tier, selfId})
+												elapsedTime = 0
+												changesCount = 0
+												updateTalentsFrame:SetScript("OnUpdate", OnUpdateChangeTalents)
+											end
+										end
+									end
+									return
+								end
+							end
+						end
+					end
+				end
+			end
+			DEFAULT_CHAT_FRAME:AddMessage("|cFFffff00SubSpec|r: Profile not found")
+		else
+			DEFAULT_CHAT_FRAME:AddMessage("|cFFffff00SubSpec|r commands:")
+			DEFAULT_CHAT_FRAME:AddMessage("   |cFFffff00/subspec load <profile name>|r - load the talents profile")
+			DEFAULT_CHAT_FRAME:AddMessage("   |cFFffff00/subspec version|r - print the addon version")
+		end
+	end
+end

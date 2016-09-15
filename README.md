@@ -7,6 +7,9 @@ Just copy **SubSpec** folder to **World of Warcraft\\Interface\\AddOns\\**.
 #Note
 Support user interfaces: standard, ElvUI.
 
+#Slash commands
+>**/subspec load \<profile name\>** - load the talents profile  
+>**/subspec version** - display the addon version
 
 #Screenshots
 ![_image not found_](screenshots/Standard.jpg)
