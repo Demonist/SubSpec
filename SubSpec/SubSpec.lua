@@ -8,6 +8,7 @@ eventFrame:Show()
 local updateTalentsFrame = CreateFrame("Frame", "SubSpec_UpdateTalentsFrame", UIParent)
 updateTalentsFrame:Show()
 
+
 local function GetCurrentTalents()
 	local ret = {}
 	for tier = 1, GetMaxTalentTier() do
@@ -23,6 +24,25 @@ local function GetCurrentTalents()
 		end
 	end
 	return ret
+end
+
+local chatFilterMatches = {
+	"^"..ERR_SPELL_UNLEARNED_S:gsub("%%s", "(.+)"),
+	"^"..ERR_LEARN_PASSIVE_S:gsub("%%s", "(.+)"),
+	"^"..ERR_LEARN_SPELL_S:gsub("%%s", "(.+)"),
+	"^"..ERR_LEARN_ABILITY_S:gsub("%%s", "(.+)")
+}
+local function ChatFilter(self, event, msg, ...)
+	for _, m in pairs(chatFilterMatches) do
+		if msg:match(m) then return true; end
+	end
+	return false, msg, ...
+end
+local function StartChatFiltering()
+	ChatFrame_AddMessageEventFilter("CHAT_MSG_SYSTEM", ChatFilter)
+end
+local function StopChatFiltering()
+	ChatFrame_RemoveMessageEventFilter("CHAT_MSG_SYSTEM", ChatFilter)
 end
 
 local elapsedTime = -1
@@ -45,6 +65,7 @@ local function OnUpdateChangeTalents(self, elapsed)
 		changesCount = changesCount + 1
 		if changed == false or changesCount >= 20 then
 			updateTalentsFrame:SetScript("OnUpdate", nil)
+			StopChatFiltering()
 		end
 		elapsedTime = 0
 	else
@@ -126,6 +147,7 @@ local function CreateNewProfileButton(parent, text, data)
 		talents = {}
 		mainFrame.currentButton:ShowOn(self)
 		local currentData = GetCurrentTalents()
+		StartChatFiltering()
 		for tier = 1, GetMaxTalentTier() do
 			if self.profileFrame.data and self.profileFrame.data[tier] and self.profileFrame.data[tier]["id"] and self.profileFrame.data[tier]["id"] > 0 then
 				local selfId = self.profileFrame.data[tier]["id"]
@@ -140,6 +162,7 @@ local function CreateNewProfileButton(parent, text, data)
 				end
 			end
 		end
+		if #talents == 0 then StopChatFiltering(); end
 	end)
 
 	ret.index = 0
@@ -491,6 +514,7 @@ function SlashCmdList.SUBSPEC(msg)
 							for _, storageProfile in ipairs(storage) do
 								if storageProfile["name"] == profile then
 									talents = {}
+									StartChatFiltering()
 									local profileData = storageProfile["data"]
 									local currentData = GetCurrentTalents()
 									for tier = 1, GetMaxTalentTier() do
@@ -508,6 +532,7 @@ function SlashCmdList.SUBSPEC(msg)
 											end
 										end
 									end
+									if #talents == 0 then StopChatFiltering(); end
 									return
 								end
 							end
