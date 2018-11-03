@@ -1,5 +1,5 @@
 #SubSpec
-It is the World Of Warcraft addon that allows to create a profiles of talents and switch between them by one button.
+It is the World Of Warcraft addon that allows to create profiles of talents and to switch between them by one button.
 
 #Installation
 Just copy **SubSpec** folder to **World of Warcraft\\Interface\\AddOns\\**.

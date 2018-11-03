@@ -1,9 +1,9 @@
-## Interface: 70003
+## Interface: 80000
 ## Title: SubSpec
 ## Author: Demonist
-## Version: 2.1.5.0
+## Version: 2.2.0.0
 ## SavedVariables: SubSpecStorage
-## Notes: Allows to create a profiles of talents.
+## Notes: The addon allows to create profiles of talents.
 ## Notes-ruRU: Позволяет создавать профили талантов.
 
 Locale.lua
