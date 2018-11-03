@@ -30,10 +30,10 @@ end
 if locale == "deDE" then
 	L["new"] = "[Neues Profil]"
 	L["rename"] = "Umbenennen"
-	L["save"] = "Sparen"
+	L["save"] = "Speichern"
 	L["remove"] = "Entfernen"
-	L["moveLeft"] = "Geh nach links"
-	L["moveRight"] = "Nach rechts bewegen"
+	L["moveLeft"] = "Nach links verschieben"
+	L["moveRight"] = "Nach rechts verschieben"
 	L["renameText"] = "Geben Sie den neuen Profilnamen"
 	L["cancel"] = "Stornieren"
 end

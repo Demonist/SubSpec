@@ -1,7 +1,7 @@
 ## Interface: 80000
 ## Title: SubSpec
 ## Author: Demonist
-## Version: 2.2.0.0
+## Version: 2.2.0.1
 ## SavedVariables: SubSpecStorage
 ## Notes: The addon allows to create profiles of talents.
 ## Notes-ruRU: Позволяет создавать профили талантов.
